@@ -976,46 +976,6 @@ public final class NIOPipeBootstrap {
     }
 }
 
-// typealias QuickO = QuickOption &
-
-/* public class QuickOption {
-    func applyOption<BootstrapT : ServerBootstrap>(serverBootstrap : BootstrapT) -> BootstrapT { fatalError() } // horrid!
-}
-
-class QuickServerOptionImpl<Option : ChannelOption> : QuickOption {
-    let option : Option
-    let value : Option.Value
-    
-    init(option: Option, value : Option.Value) {
-        self.option = option
-        self.value = value
-    }
-    
-    override func applyOption<BootstrapT : ServerBootstrap>(serverBootstrap: BootstrapT) -> BootstrapT {
-        return serverBootstrap.serverChannelOption(option, value: value)
-    }
-}
-
-/* struct QuckChannelOptionImpl<Option : ChannelOption> : QuickOption {
-    let option : Option
-    let value : Option.Value
-    
-    func applyOption(serverBootstrap: ServerBootstrap) {
-        // .channelOption(ChannelOptions.autoRead, value: false)
-        serverBootstrap.channelOption(option, value: value)
-    }
-} */
-
-public extension QuickOption {
-    // public static let reuseAddr : QuickOption = QuickServerOptionImpl(option: ChannelOptions.socketOption(.reuseaddr), value: 1)
-    static let reuseAddr : QuickOption = QuickServerOptionImpl(option: ChannelOptions.socketOption(.reuseaddr), value: 1)
-    static let disableAutoRead : QuickOption = QuickServerOptionImpl(option: ChannelOptions.autoRead, value: false)
-    
-   // static func reuseAddr() -> QuickOption { return QuickServerOptionImpl(option: ChannelOptions.socketOption(.reuseaddr), value: 1) }
-   // static func disableAutoRead() -> QuickOption { return QuickServerOptionImpl(option: ChannelOptions.autoRead, value: false)}
-    // .serverChannelOption(ChannelOptions.autoRead, value: false)
-} */
-
 public struct QuickOption {
     private let apply : QuickApply
     
@@ -1028,12 +988,6 @@ public struct QuickOption {
     }
 }
 
-extension QuickOption {
-    public static let reuseAddr : QuickOption = QuickOption(apply: QuickApplyImpl(option: ChannelOptions.socketOption(.reuseaddr), value: 1))
-    public static let disableAutoRead : QuickOption = QuickOption(apply: QuickApplyImpl(option: ChannelOptions.autoRead, value: false))
-    
-}
-
 private protocol QuickApply {
     func applyOption<BootstrapT : ServerBootstrap>(serverBootstrap : BootstrapT) -> BootstrapT
 }
@@ -1042,12 +996,12 @@ private struct QuickApplyImpl<Option : ChannelOption> : QuickApply {
     let option : Option
     let value : Option.Value
     
-    init(option: Option, value : Option.Value) {
-        self.option = option
-        self.value = value
-    }
-    
     func applyOption<BootstrapT : ServerBootstrap>(serverBootstrap: BootstrapT) -> BootstrapT {
         return serverBootstrap.serverChannelOption(option, value: value)
     }
+}
+
+extension QuickOption {
+    public static let reuseAddr : QuickOption = QuickOption(apply: QuickApplyImpl(option: ChannelOptions.socketOption(.reuseaddr), value: 1))
+    public static let disableAutoRead : QuickOption = QuickOption(apply: QuickApplyImpl(option: ChannelOptions.autoRead, value: false))
 }
