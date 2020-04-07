@@ -176,7 +176,11 @@ public final class ServerBootstrap {
         return self
     }
     
-    public func serverOptions(_ options: [QuickOption]) -> Self {
+    /// Specifies some `ChannelOption`s to be applied to the `ServerSocketChannel`.
+    /// - See: serverChannelOption
+    /// - Parameter options: List of shorthand options to apply.
+    /// - Returns: The update server bootstrap (this mutated)
+    public func serverOptions(_ options: [ShorthandBootstrapOption]) -> Self {
         var toRet = self
         for option in options {
             toRet = option.applyOption(serverBootstrap: toRet)
@@ -976,23 +980,28 @@ public final class NIOPipeBootstrap {
     }
 }
 
-public struct QuickOption {
-    private let apply : QuickApply
+/// An channel option which can be applied to bootstrap using shorthand notation.
+/// - See: ServerBootstrap.serverOptions(_ options: [ShorthandBootstrapOption])
+public struct ShorthandBootstrapOption {
+    private let apply : ShorthandApply
     
-    private init(apply : QuickApply) {
+    private init(apply : ShorthandApply) {
         self.apply = apply
     }
     
-    public func applyOption<BootstrapT : ServerBootstrap>(serverBootstrap : BootstrapT) -> BootstrapT {
+    /// Apply the contained option to the supplied ServerBootstrap
+    /// - Parameter serverBootstrap: bootstrap to apply this option to.
+    /// - Returns:the modified bootstrap (currently the same one mutated)
+    func applyOption<BootstrapT : ServerBootstrap>(serverBootstrap : BootstrapT) -> BootstrapT {
         return apply.applyOption(serverBootstrap: serverBootstrap)
     }
 }
 
-private protocol QuickApply {
+private protocol ShorthandApply {
     func applyOption<BootstrapT : ServerBootstrap>(serverBootstrap : BootstrapT) -> BootstrapT
 }
 
-private struct QuickApplyImpl<Option : ChannelOption> : QuickApply {
+private struct ShorthandApplyImpl<Option : ChannelOption> : ShorthandApply {
     let option : Option
     let value : Option.Value
     
@@ -1001,7 +1010,13 @@ private struct QuickApplyImpl<Option : ChannelOption> : QuickApply {
     }
 }
 
-extension QuickOption {
-    public static let reuseAddr : QuickOption = QuickOption(apply: QuickApplyImpl(option: ChannelOptions.socketOption(.reuseaddr), value: 1))
-    public static let disableAutoRead : QuickOption = QuickOption(apply: QuickApplyImpl(option: ChannelOptions.autoRead, value: false))
+/// Approved shorthand options.
+extension ShorthandBootstrapOption {
+    /// Option to reuse address.
+    /// - See:  NIOBSDSocket.Option.reuseaddr
+    public static let reuseAddr  = ShorthandBootstrapOption(apply: ShorthandApplyImpl(option: ChannelOptions.socketOption(.reuseaddr), value: 1))
+    
+    /// Option to disble autoRead
+    /// - See: ChannelOptions.autoRead
+    public static let disableAutoRead = ShorthandBootstrapOption(apply: ShorthandApplyImpl(option: ChannelOptions.autoRead, value: false))
 }
