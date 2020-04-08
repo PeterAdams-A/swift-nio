@@ -528,6 +528,7 @@ let socketBootstrap = ServerBootstrap(group: group)
     // Specify backlog and enable SO_REUSEADDR for the server itself
     .serverChannelOption(ChannelOptions.backlog, value: 256)
     .serverOptions([.reuseAddr])
+    
     // Set the handlers that are applied to the accepted Channels
     .childChannelInitializer(childChannelInitializer(channel:))
 
