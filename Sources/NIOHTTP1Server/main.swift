@@ -523,8 +523,6 @@ func childChannelInitializer(channel: Channel) -> EventLoopFuture<Void> {
     }
 }
 
-// let x : [QuickOption] = [.reuseAddr, .disableAutoRead]
-
 let fileIO = NonBlockingFileIO(threadPool: threadPool)
 let socketBootstrap = ServerBootstrap(group: group)
     // Specify backlog and enable SO_REUSEADDR for the server itself
