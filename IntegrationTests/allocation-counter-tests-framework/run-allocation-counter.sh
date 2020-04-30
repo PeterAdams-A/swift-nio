@@ -16,6 +16,10 @@
 set -eu
 here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 build_opts=( -c release )
+swift="xcrun -toolchain org.swift.522202004151a swift" # 5.2.2
+# swift="xcrun -toolchain org.swift.51320200128a swift" #5.1
+#swift="swift"
+echo $swift
 
 function die() {
     echo >&2 "ERROR: $*"
@@ -181,7 +185,7 @@ EOF
     done
     hooked_package_swift_end >> Package.swift
 
-    swift package edit --path "$swiftpm_pkg_root" "$swiftpm_pkg_name"
+    ${swift} package edit --path "$swiftpm_pkg_root" "$swiftpm_pkg_name"
     )
 }
 
@@ -194,7 +198,7 @@ function find_swiftpm_package_name() {
     (
     set -eu
     cd "$1"
-    swift package dump-package | grep '^  "name"' | cut -d'"' -f4
+    ${swift} package dump-package | grep '^  "name"' | cut -d'"' -f4
     )
 }
 
@@ -283,9 +287,9 @@ build_package \
 (
 set -eu
 cd "$working_dir"
-swift build "${build_opts[@]}"
+${swift} build "${build_opts[@]}"
 for f in "${files[@]}"; do
     echo "- $f"
-    swift run "${build_opts[@]}" "$(module_name_from_path "$f")"
+    ${swift} run "${build_opts[@]}" "$(module_name_from_path "$f")"
 done
 )

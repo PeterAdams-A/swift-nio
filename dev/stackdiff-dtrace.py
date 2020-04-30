@@ -18,23 +18,39 @@ import re
 
 num_regex = "^ +([0-9a-fx]+)$"
 stack_regex = "^ +(.*)$"
+good_key_regex = "^ +test"
 
 def put_in_dict(path):
     dictionary = {}
     with open(path, "r") as f:
         current_text = ""
+        good_key = ""
         for line in f:
             if line == "":
                 break
             if re.match(num_regex, line):
                 key = "\n".join(map(lambda l: l.strip().split("+")[0],
                                     current_text.split("\n")[0:8]))
-                dictionary[key] = (int(line), current_text)
+                if good_key != "":
+                    key = good_key
+                    #print("GK" + good_key)
+                if key in dictionary:
+                      (l,t) = dictionary[key]
+                      # This is not ideal at all.
+                      dictionary[key] = (int(line) + l, current_text)
+                else:
+                    dictionary[key] = (int(line), current_text)
+                # print("PPA" + key)
                 current_text = ""
+                good_key = ""
             elif line.strip() == "":
                 pass
             else:
                 current_text = current_text + line.strip() + "\n"
+                if good_key == "":
+                    if re.match(good_key_regex, line):
+                        good_key = line.split("+")[0]
+                        #print("PPA")
     return dictionary
 
 def extract_useful_keys(d):
@@ -67,6 +83,7 @@ before_file = sys.argv[1]
 after_file = sys.argv[2]
 
 after_dict = put_in_dict(after_file)
+#sys.exit(1)
 before_dict = put_in_dict(before_file)
 
 useful_after_keys = extract_useful_keys(after_dict)
@@ -75,12 +92,14 @@ useful_before_keys = extract_useful_keys(before_dict)
 print("")
 print("### only in AFTER")
 for x in sorted(list(useful_after_keys - useful_before_keys)):
+    print("KEY:  " + x)
     print(after_dict[x][0])
     print(after_dict[x][1])
 
 print("")
 print("### only in BEFORE")
 for x in sorted(list(useful_before_keys - useful_after_keys)):
+    print("KEY:  " + x)
     print(before_dict[x][0])
     print(before_dict[x][1])
 
@@ -88,6 +107,7 @@ print("")
 print("### different numbers")
 for x in sorted(list(useful_before_keys & useful_after_keys)):
     if after_dict[x][0] != before_dict[x][0]:
+        print("KEY:  " + x)
         print("before: %d, after: %d" % (before_dict[x][0],
                                          after_dict[x][0]))
         print(after_dict[x][1])
