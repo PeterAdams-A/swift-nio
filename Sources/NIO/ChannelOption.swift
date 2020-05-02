@@ -249,6 +249,14 @@ extension ChannelOptions {
 
             public init() {}
         }
+        
+        // Enable Explicit Congestion Notification in IP.
+        // See https://tools.ietf.org/html/rfc3168
+        public struct EnableExplicitCongestionNotification: ChannelOption {
+            public typealias Value = Bool
+            
+            public init() {}
+        }
     }
 }
 
@@ -299,6 +307,9 @@ public struct ChannelOptions {
 
     /// - seealso: `DatagramVectorReadMessageCountOption`
     public static let datagramVectorReadMessageCount = Types.DatagramVectorReadMessageCountOption()
+    
+    /// - seealso: `EnableExplicitCongestionNotification`
+    public static let explicitCongestionNotification = Types.EnableExplicitCongestionNotification()
 }
 
 extension ChannelOptions {
