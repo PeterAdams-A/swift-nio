@@ -268,6 +268,10 @@ extension NIOBSDSocket.Option {
     /// Control multicast time-to-live.
     public static let ip_multicast_ttl: NIOBSDSocket.Option =
             NIOBSDSocket.Option(rawValue: IP_MULTICAST_TTL)
+    
+    /// Request that we are passed type of service details when receiving datagrams.
+    static let ip_recv_tos: NIOBSDSocket.Option =
+            NIOBSDSocket.Option(rawValue: IP_RECVTOS)
 }
 
 // IPv6 Options
@@ -296,6 +300,10 @@ extension NIOBSDSocket.Option {
     /// restricted to IPv6 only.
     public static let ipv6_v6only: NIOBSDSocket.Option =
             NIOBSDSocket.Option(rawValue: IPV6_V6ONLY)
+    
+    /// Request that we are passed traffic class details when receiving datagrams.
+    static let ipv6_recv_tclass: NIOBSDSocket.Option =
+            NIOBSDSocket.Option(rawValue: IPV6_RECVTCLASS)
 }
 
 // TCP Options
