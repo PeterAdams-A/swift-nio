@@ -334,6 +334,9 @@ final class DatagramChannel: BaseSocketChannel<Socket> {
     
     /// The protocol family of this channel (if known)
     private var protocolFamily: NIOBSDSocket.ProtocolFamily? = nil
+    
+    /// Has Explicit Congestion Notification information been requested.
+    private var ecnEnabled = false
 
     // This is `Channel` API so must be thread-safe.
     override public var isWritable: Bool {
@@ -417,6 +420,7 @@ final class DatagramChannel: BaseSocketChannel<Socket> {
             break
             #endif
         case _ as ChannelOptions.Types.ExplicitCongestionNotificationsOption:
+            self.ecnEnabled = value as! Bool
             let valueAsInt: Int32 = value as! Bool ? 1 : 0
             switch protocolFamily {
             case .some(.inet):
@@ -477,6 +481,53 @@ final class DatagramChannel: BaseSocketChannel<Socket> {
             return try self.singleReadFromSocket()
         }
     }
+    
+    private func ecnDataRequestMsg() -> UnsafeMutableRawBufferPointer {
+        // TODO:  Don't allocate like a nutter.
+        let controlBytes = UnsafeMutableRawBufferPointer.allocate(byteCount: MemoryLayout<cmsghdr>.size + 1,
+                                                                  alignment: MemoryLayout<Int8>.alignment)
+        switch self.protocolFamily {
+        case .some(.inet):
+            var header = cmsghdr(cmsg_len: .init(controlBytes.count), cmsg_level: IPPROTO_IPIP, cmsg_type: IPV6_TCLASS)
+            withUnsafeBytes(of: &header) { bytes in controlBytes.copyBytes(from: bytes) }
+        case .some(.inet6):
+            var header = cmsghdr(cmsg_len: .init(controlBytes.count), cmsg_level: IPPROTO_IPIP, cmsg_type: IP_TOS)
+            withUnsafeBytes(of: &header) { bytes in controlBytes.copyBytes(from: bytes) }
+        default:
+            // This should already have been dealt with when data was requested.
+            fatalError("Impossible ECN request state.")
+        }
+        return controlBytes
+    }
+    
+    private enum EcnConstants: UInt8 {
+        case notEcT = 0x00    /* not-ECT */
+        case flag1  = 0x01    /* ECN-capable transport (1) */
+        case flag0  = 0x02    /* ECN-capable transport (0) */
+        case ce     = 0x03    /* congestion experienced */
+    }
+    
+    private func decodeEcnMsg(controlByteSlice: Slice<UnsafeMutableRawBufferPointer>) -> NIOExplicitCongestionNotificationState {
+        // I believe both IPv4 and IPv6 use the same bits
+        if self.protocolFamily == .some(.inet) || self.protocolFamily == .some(.inet6) {
+            let controlByte = controlByteSlice[MemoryLayout<cmsghdr>.size]
+            switch EcnConstants(rawValue: controlByte & 0x03) {
+            case .some(.notEcT):
+                return .transportNotCapable
+            case .some(.flag1):
+                return .transportCapableFlag1
+            case .some(.flag0):
+                return .transportCapableFlag0
+            case .some(.ce):
+                return .congestionExperienced
+            default:
+                fatalError("ecn parse fail")
+            }
+        } else {
+            // This should already have been dealt with when data was requested.
+            fatalError("Impossible ECN request state.")
+        }
+    }
 
     private func singleReadFromSocket() throws -> ReadResult {
         var rawAddress = sockaddr_storage()
@@ -484,8 +535,10 @@ final class DatagramChannel: BaseSocketChannel<Socket> {
         var buffer = self.recvAllocator.buffer(allocator: self.allocator)
         var readResult = ReadResult.none
 
-        // Right now we don't actually ask for any control messages. We will eventually.
-        let controlBytes = UnsafeMutableRawBufferPointer(start: nil, count: 0)
+        // Request ecn data if required.
+        let controlBytes = self.ecnEnabled ?
+                ecnDataRequestMsg() :
+                UnsafeMutableRawBufferPointer(start: nil, count: 0)
         var controlByteSlice = controlBytes[...]
 
         for i in 1...self.maxMessagesPerRead {
@@ -504,7 +557,11 @@ final class DatagramChannel: BaseSocketChannel<Socket> {
                 let mayGrow = recvAllocator.record(actualReadBytes: bytesRead)
                 readPending = false
 
-                let msg = AddressedEnvelope(remoteAddress: rawAddress.convert(), data: buffer)
+                var msg = AddressedEnvelope(remoteAddress: rawAddress.convert(), data: buffer)
+                if self.ecnEnabled {
+                    msg.metadata = AddressedEnvelope.Metadata(
+                        ecnState: decodeEcnMsg(controlByteSlice: controlByteSlice))
+                }
                 assert(self.isActive)
                 pipeline.fireChannelRead0(NIOAny(msg))
                 if mayGrow && i < maxMessagesPerRead {
