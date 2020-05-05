@@ -48,12 +48,10 @@ extension ServerBootstrap {
     /// - See: childChannelOption
     /// - Parameter options: List of shorthand options to apply.
     /// - Returns: The update server bootstrap (`self` being mutated)
-    @inlinable
-    public func childOptions(_ options: [NIOTCPShorthandOption]) -> ServerBootstrap {
+    // @inlinable
+    public func childOptions(_ options: NIOTCPShorthandOptions) -> ServerBootstrap {
         var toReturn = self
-        for option in options {
-            toReturn = toReturn.childOption(option)
-        }
+        options.forEach({option in toReturn = toReturn.childOption(option)})
         return toReturn
     }
     
@@ -286,6 +284,33 @@ extension NIOTCPShorthandOption {
     /// and no more data will be received.
     public static let allowRemoteHalfClosure =
         NIOTCPShorthandOption(.allowRemoteHalfClosure)
+}
+
+public struct NIOTCPShorthandOptions : ExpressibleByArrayLiteral {
+    private var option0 : NIOTCPShorthandOption?
+    private var option1 : NIOTCPShorthandOption?
+    private var option2 : NIOTCPShorthandOption?
+    
+    public init(arrayLiteral: NIOTCPShorthandOption...) {
+        if arrayLiteral.count > 0 {
+            self.option0 = arrayLiteral[0]
+        }
+        if arrayLiteral.count > 1 {
+            self.option1 = arrayLiteral[1]
+        }
+        if arrayLiteral.count > 2 {
+            self.option2 = arrayLiteral[2]
+        }
+        if arrayLiteral.count > 3 {
+            fatalError("Too big")
+        }
+    }
+    
+    func forEach(_ body: (NIOTCPShorthandOption) throws -> Void) rethrows {
+        if let option0 = self.option0 { try body(option0) }
+        if let option1 = self.option1 { try body(option1) }
+        if let option2 = self.option2 { try body(option2) }
+    }
 }
 
 // MARK: TCP - server
