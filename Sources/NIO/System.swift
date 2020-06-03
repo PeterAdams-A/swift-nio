@@ -100,6 +100,8 @@ private let sysRecvMmsg: @convention(c) (CInt, UnsafeMutablePointer<CNIODarwin_m
 
 private let sysCmsgFirstHdr: @convention(c) (UnsafePointer<msghdr>?) -> UnsafeMutablePointer<cmsghdr>? =
                 CNIO_CMSG_FIRSTHDR
+private let sysCmsgNxtHdr: @convention(c) (UnsafePointer<msghdr>?, UnsafePointer<cmsghdr>?) ->
+                UnsafeMutablePointer<cmsghdr>? = CNIO_CMSG_NXTHDR
 
 private func isBlacklistedErrno(_ code: Int32) -> Bool {
     switch code {
@@ -552,7 +554,14 @@ internal enum KQueue {
 #endif
 
 internal extension Posix {
-    static func cmsgFirstHeader(from: UnsafePointer<msghdr>?) throws -> UnsafeMutablePointer<cmsghdr>? {
-        return sysCmsgFirstHdr(from)
+    static func cmsgFirstHeader(inside msghdr: UnsafePointer<msghdr>?) throws -> UnsafeMutablePointer<cmsghdr>? {
+        return sysCmsgFirstHdr(msghdr)
+    }
+    
+    static func cmsgNextHeader(inside msghdr: UnsafePointer<msghdr>?, from: UnsafePointer<cmsghdr>?) throws
+        -> UnsafeMutablePointer<cmsghdr>? {
+        return sysCmsgNxtHdr(msghdr, from)
     }
 }
+
+

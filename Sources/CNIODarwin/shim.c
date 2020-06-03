@@ -54,4 +54,8 @@ struct cmsghdr *CNIO_CMSG_FIRSTHDR(const struct msghdr *mhdr) {
     return CMSG_FIRSTHDR(mhdr);
 }
 
+struct cmsghdr *CNIO_CMSG_NXTHDR(const struct msghdr *mhdr, const struct cmsghdr *cmsg) {
+    return CMSG_NXTHDR(mhdr, cmsg);
+}
+
 #endif  // __APPLE__

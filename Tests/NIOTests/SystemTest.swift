@@ -53,7 +53,7 @@ class SystemTest: XCTestCase {
                                                   0x1B, 0x00, 0x00, 0x00,
                                                   0x01, 0x00, 0x00, 0x00]
 
-    func testMsgHeader() {
+    func testCmsgFirstHeader() {
         var exampleCmsgHrd = SystemTest.cmsghdrExample
         XCTAssertNoThrow(try {
             try exampleCmsgHrd.withUnsafeMutableBytes { pCmsgHdr in
@@ -62,8 +62,28 @@ class SystemTest: XCTestCase {
                 msgHdr.msg_controllen = socklen_t(pCmsgHdr.count)
 
                 try withUnsafePointer(to: msgHdr) { pMsgHdr in
-                    let result = try Posix.cmsgFirstHeader(from: pMsgHdr)
+                    let result = try Posix.cmsgFirstHeader(inside: pMsgHdr)
                     XCTAssertEqual(pCmsgHdr.baseAddress, result)
+                }
+            }
+        }())
+    }
+    
+    func testCMsgNextHeader() {
+        var exampleCmsgHrd = SystemTest.cmsghdrExample
+        XCTAssertNoThrow(try {
+            try exampleCmsgHrd.withUnsafeMutableBytes { pCmsgHdr in
+                var msgHdr = msghdr()
+                msgHdr.msg_control = pCmsgHdr.baseAddress
+                msgHdr.msg_controllen = socklen_t(pCmsgHdr.count)
+
+                try withUnsafePointer(to: msgHdr) { pMsgHdr in
+                    let first = try Posix.cmsgFirstHeader(inside: pMsgHdr)
+                    let second = try Posix.cmsgNextHeader(inside: pMsgHdr, from: first)
+                    let expectedSecondSlice = UnsafeMutableRawBufferPointer(rebasing: pCmsgHdr[16...])
+                    XCTAssertEqual(expectedSecondSlice.baseAddress, second)
+                    let third = try Posix.cmsgNextHeader(inside: pMsgHdr, from: second)
+                    XCTAssertEqual(third, nil)
                 }
             }
         }())
