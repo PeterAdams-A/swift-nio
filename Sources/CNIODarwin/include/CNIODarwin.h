@@ -34,5 +34,7 @@ typedef struct {
 int CNIODarwin_sendmmsg(int sockfd, CNIODarwin_mmsghdr *msgvec, unsigned int vlen, int flags);
 int CNIODarwin_recvmmsg(int sockfd, CNIODarwin_mmsghdr *msgvec, unsigned int vlen, int flags, struct timespec *timeout);
 
+struct cmsghdr *CNIO_CMSG_FIRSTHDR(const struct msghdr *);
+
 #endif  // __APPLE__
 #endif  // C_NIO_DARWIN_H

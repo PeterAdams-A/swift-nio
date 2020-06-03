@@ -42,4 +42,30 @@ class SystemTest: XCTestCase {
             return [readFD, writeFD]
         }
     }
+    
+    // Example twin data options on apple. - TOS and TTL
+    private static let cmsghdrExample: [UInt8] = [0x10, 0x00, 0x00, 0x00,
+                                                  0x00, 0x00, 0x00, 0x00,
+                                                  0x07, 0x00, 0x00, 0x00,
+                                                  0x7F, 0x00, 0x00, 0x01,
+                                                  0x0D, 0x00, 0x00, 0x00,
+                                                  0x00, 0x00, 0x00, 0x00,
+                                                  0x1B, 0x00, 0x00, 0x00,
+                                                  0x01, 0x00, 0x00, 0x00]
+
+    func testMsgHeader() {
+        var exampleCmsgHrd = SystemTest.cmsghdrExample
+        XCTAssertNoThrow(try {
+            try exampleCmsgHrd.withUnsafeMutableBytes { pCmsgHdr in
+                var msgHdr = msghdr()
+                msgHdr.msg_control = pCmsgHdr.baseAddress
+                msgHdr.msg_controllen = socklen_t(pCmsgHdr.count)
+
+                try withUnsafePointer(to: msgHdr) { pMsgHdr in
+                    let result = try Posix.cmsgFirstHeader(from: pMsgHdr)
+                    XCTAssertEqual(pCmsgHdr.baseAddress, result)
+                }
+            }
+        }())
+    }
 }

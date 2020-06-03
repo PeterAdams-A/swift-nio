@@ -98,6 +98,9 @@ private let sysSendMmsg: @convention(c) (CInt, UnsafeMutablePointer<CNIODarwin_m
 private let sysRecvMmsg: @convention(c) (CInt, UnsafeMutablePointer<CNIODarwin_mmsghdr>?, CUnsignedInt, CInt, UnsafeMutablePointer<timespec>?) -> CInt = CNIODarwin_recvmmsg
 #endif
 
+private let sysCmsgFirstHdr: @convention(c) (UnsafePointer<msghdr>?) -> UnsafeMutablePointer<cmsghdr>? =
+                CNIO_CMSG_FIRSTHDR
+
 private func isBlacklistedErrno(_ code: Int32) -> Bool {
     switch code {
     case EFAULT, EBADF:
@@ -547,3 +550,9 @@ internal enum KQueue {
     }
 }
 #endif
+
+internal extension Posix {
+    static func cmsgFirstHeader(from: UnsafePointer<msghdr>?) throws -> UnsafeMutablePointer<cmsghdr>? {
+        return sysCmsgFirstHdr(from)
+    }
+}

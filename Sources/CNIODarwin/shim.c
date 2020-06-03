@@ -50,4 +50,8 @@ int CNIODarwin_recvmmsg(int sockfd, CNIODarwin_mmsghdr *msgvec, unsigned int vle
     errx(EX_SOFTWARE, "recvmmsg shim not implemented on Darwin platforms\n");
 }
 
+struct cmsghdr *CNIO_CMSG_FIRSTHDR(const struct msghdr *mhdr) {
+    return CMSG_FIRSTHDR(mhdr);
+}
+
 #endif  // __APPLE__
