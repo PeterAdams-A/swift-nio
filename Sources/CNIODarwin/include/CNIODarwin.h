@@ -34,11 +34,12 @@ typedef struct {
 int CNIODarwin_sendmmsg(int sockfd, CNIODarwin_mmsghdr *msgvec, unsigned int vlen, int flags);
 int CNIODarwin_recvmmsg(int sockfd, CNIODarwin_mmsghdr *msgvec, unsigned int vlen, int flags, struct timespec *timeout);
 
-struct cmsghdr *CNIO_CMSG_FIRSTHDR(const struct msghdr *);
-struct cmsghdr *CNIO_CMSG_NXTHDR(const struct msghdr *, const struct cmsghdr *);
-unsigned char *CNIO_CMSG_DATA(const struct cmsghdr *);
-size_t CNIO_CMSG_LEN(size_t);
-size_t CNIO_CMSG_SPACE(size_t);
+// cmsghdr handling
+struct cmsghdr *CNIODarwin_CMSG_FIRSTHDR(const struct msghdr *);
+struct cmsghdr *CNIODarwin_CMSG_NXTHDR(const struct msghdr *, const struct cmsghdr *);
+const unsigned char *CNIODarwin_CMSG_DATA(const struct cmsghdr *);
+size_t CNIODarwin_CMSG_LEN(size_t);
+size_t CNIODarwin_CMSG_SPACE(size_t);
 
 #endif  // __APPLE__
 #endif  // C_NIO_DARWIN_H

@@ -56,56 +56,50 @@ class SystemTest: XCTestCase {
 
     func testCmsgFirstHeader() {
         var exampleCmsgHrd = SystemTest.cmsghdrExample
-        XCTAssertNoThrow(try {
-            try exampleCmsgHrd.withUnsafeMutableBytes { pCmsgHdr in
-                var msgHdr = msghdr()
-                msgHdr.msg_control = pCmsgHdr.baseAddress
-                msgHdr.msg_controllen = socklen_t(pCmsgHdr.count)
+        exampleCmsgHrd.withUnsafeMutableBytes { pCmsgHdr in
+            var msgHdr = msghdr()
+            msgHdr.msg_control = pCmsgHdr.baseAddress
+            msgHdr.msg_controllen = socklen_t(pCmsgHdr.count)
 
-                try withUnsafePointer(to: msgHdr) { pMsgHdr in
-                    let result = try Posix.cmsgFirstHeader(inside: pMsgHdr)
-                    XCTAssertEqual(pCmsgHdr.baseAddress, result)
-                }
+            withUnsafePointer(to: msgHdr) { pMsgHdr in
+                let result = Posix.cmsgFirstHeader(inside: pMsgHdr)
+                XCTAssertEqual(pCmsgHdr.baseAddress, result)
             }
-        }())
+        }
     }
     
     func testCMsgNextHeader() {
         var exampleCmsgHrd = SystemTest.cmsghdrExample
-        XCTAssertNoThrow(try {
-            try exampleCmsgHrd.withUnsafeMutableBytes { pCmsgHdr in
-                var msgHdr = msghdr()
-                msgHdr.msg_control = pCmsgHdr.baseAddress
-                msgHdr.msg_controllen = socklen_t(pCmsgHdr.count)
+        exampleCmsgHrd.withUnsafeMutableBytes { pCmsgHdr in
+            var msgHdr = msghdr()
+            msgHdr.msg_control = pCmsgHdr.baseAddress
+            msgHdr.msg_controllen = socklen_t(pCmsgHdr.count)
 
-                try withUnsafePointer(to: msgHdr) { pMsgHdr in
-                    let first = try Posix.cmsgFirstHeader(inside: pMsgHdr)
-                    let second = try Posix.cmsgNextHeader(inside: pMsgHdr, from: first)
-                    let expectedSecondSlice = UnsafeMutableRawBufferPointer(rebasing: pCmsgHdr[16...])
-                    XCTAssertEqual(expectedSecondSlice.baseAddress, second)
-                    let third = try Posix.cmsgNextHeader(inside: pMsgHdr, from: second)
-                    XCTAssertEqual(third, nil)
-                }
+            withUnsafeMutablePointer(to: &msgHdr) { pMsgHdr in
+                let first = Posix.cmsgFirstHeader(inside: pMsgHdr)
+                let second = Posix.cmsgNextHeader(inside: pMsgHdr, from: first)
+                let expectedSecondSlice = UnsafeMutableRawBufferPointer(rebasing: pCmsgHdr[16...])
+                XCTAssertEqual(expectedSecondSlice.baseAddress, second)
+                let third = Posix.cmsgNextHeader(inside: pMsgHdr, from: second)
+                XCTAssertEqual(third, nil)
             }
-        }())
+        }
     }
     
     func testCMsgData() {
         var exampleCmsgHrd = SystemTest.cmsghdrExample
-        XCTAssertNoThrow(try {
-            try exampleCmsgHrd.withUnsafeMutableBytes { pCmsgHdr in
-                var msgHdr = msghdr()
-                msgHdr.msg_control = pCmsgHdr.baseAddress
-                msgHdr.msg_controllen = socklen_t(pCmsgHdr.count)
+        exampleCmsgHrd.withUnsafeMutableBytes { pCmsgHdr in
+            var msgHdr = msghdr()
+            msgHdr.msg_control = pCmsgHdr.baseAddress
+            msgHdr.msg_controllen = socklen_t(pCmsgHdr.count)
 
-                try withUnsafePointer(to: msgHdr) { pMsgHdr in
-                    let first = try Posix.cmsgFirstHeader(inside: pMsgHdr)
-                    let firstData = try Posix.cmsgData(for: first)
-                    let expecedFirstData = UnsafeMutableRawBufferPointer(rebasing: pCmsgHdr[12..<16])
-                    XCTAssertEqual(expecedFirstData.baseAddress, firstData)
-                }
+            withUnsafePointer(to: msgHdr) { pMsgHdr in
+                let first = Posix.cmsgFirstHeader(inside: pMsgHdr)
+                let firstData = Posix.cmsgData(for: first)
+                let expecedFirstData = UnsafeRawBufferPointer(rebasing: pCmsgHdr[12..<16])
+                XCTAssertEqual(expecedFirstData.baseAddress, firstData)
             }
-        }())
+        }
     }
     #endif
 }

@@ -98,13 +98,23 @@ private let sysSendMmsg: @convention(c) (CInt, UnsafeMutablePointer<CNIODarwin_m
 private let sysRecvMmsg: @convention(c) (CInt, UnsafeMutablePointer<CNIODarwin_mmsghdr>?, CUnsignedInt, CInt, UnsafeMutablePointer<timespec>?) -> CInt = CNIODarwin_recvmmsg
 #endif
 
+#if os(Linux)
 private let sysCmsgFirstHdr: @convention(c) (UnsafePointer<msghdr>?) -> UnsafeMutablePointer<cmsghdr>? =
-                CNIO_CMSG_FIRSTHDR
+                CNIOLinux_CMSG_FIRSTHDR
+private let sysCmsgNxtHdr: @convention(c) (UnsafeMutablePointer<msghdr>?, UnsafeMutablePointer<cmsghdr>?) ->
+                UnsafeMutablePointer<cmsghdr>? = CNIOLinux_CMSG_NXTHDR
+private let sysCmsgData: @convention(c) (UnsafePointer<cmsghdr>?) -> UnsafePointer<UInt8>? = CNIOLinux_CMSG_DATA
+private let sysCmsgSpace: @convention(c) (size_t) -> size_t = CNIOLinux_CMSG_SPACE
+private let sysCmsgLen: @convention(c) (size_t) -> size_t = CNIOLinux_CMSG_LEN
+#else
+private let sysCmsgFirstHdr: @convention(c) (UnsafePointer<msghdr>?) -> UnsafeMutablePointer<cmsghdr>? =
+                CNIODarwin_CMSG_FIRSTHDR
 private let sysCmsgNxtHdr: @convention(c) (UnsafePointer<msghdr>?, UnsafePointer<cmsghdr>?) ->
-                UnsafeMutablePointer<cmsghdr>? = CNIO_CMSG_NXTHDR
-private let sysCmsgData: @convention(c) (UnsafePointer<cmsghdr>?) -> UnsafeMutablePointer<UInt8>? = CNIO_CMSG_DATA
-private let sysCmsgSpace: @convention(c) (size_t) -> size_t = CNIO_CMSG_SPACE
-private let sysCmsgLen: @convention(c) (size_t) -> size_t = CNIO_CMSG_LEN
+                UnsafeMutablePointer<cmsghdr>? = CNIODarwin_CMSG_NXTHDR
+private let sysCmsgData: @convention(c) (UnsafePointer<cmsghdr>?) -> UnsafePointer<UInt8>? = CNIODarwin_CMSG_DATA
+private let sysCmsgSpace: @convention(c) (size_t) -> size_t = CNIODarwin_CMSG_SPACE
+private let sysCmsgLen: @convention(c) (size_t) -> size_t = CNIODarwin_CMSG_LEN
+#endif
 
 private func isBlacklistedErrno(_ code: Int32) -> Bool {
     switch code {
@@ -535,16 +545,16 @@ internal extension Posix {
 }
 
 internal extension Posix {
-    static func cmsgFirstHeader(inside msghdr: UnsafePointer<msghdr>?) throws -> UnsafeMutablePointer<cmsghdr>? {
+    static func cmsgFirstHeader(inside msghdr: UnsafePointer<msghdr>?) -> UnsafeMutablePointer<cmsghdr>? {
         return sysCmsgFirstHdr(msghdr)
     }
     
-    static func cmsgNextHeader(inside msghdr: UnsafePointer<msghdr>?, from: UnsafePointer<cmsghdr>?) throws
+    static func cmsgNextHeader(inside msghdr: UnsafeMutablePointer<msghdr>?, from: UnsafeMutablePointer<cmsghdr>?)
         -> UnsafeMutablePointer<cmsghdr>? {
         return sysCmsgNxtHdr(msghdr, from)
     }
     
-    static func cmsgData(for header: UnsafePointer<cmsghdr>?) -> UnsafeMutablePointer<UInt8>? {
+    static func cmsgData(for header: UnsafePointer<cmsghdr>?) -> UnsafePointer<UInt8>? {
         return sysCmsgData(header)
     }
     
