@@ -58,4 +58,8 @@ struct cmsghdr *CNIO_CMSG_NXTHDR(const struct msghdr *mhdr, const struct cmsghdr
     return CMSG_NXTHDR(mhdr, cmsg);
 }
 
+unsigned char *CNIO_CMSG_DATA(const struct cmsghdr *cmsg) {
+    return CMSG_DATA(cmsg);
+}
+
 #endif  // __APPLE__

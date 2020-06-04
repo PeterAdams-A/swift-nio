@@ -102,6 +102,7 @@ private let sysCmsgFirstHdr: @convention(c) (UnsafePointer<msghdr>?) -> UnsafeMu
                 CNIO_CMSG_FIRSTHDR
 private let sysCmsgNxtHdr: @convention(c) (UnsafePointer<msghdr>?, UnsafePointer<cmsghdr>?) ->
                 UnsafeMutablePointer<cmsghdr>? = CNIO_CMSG_NXTHDR
+private let sysCmsgData: @convention(c) (UnsafePointer<cmsghdr>?) -> UnsafeMutablePointer<UInt8>? = CNIO_CMSG_DATA
 
 private func isBlacklistedErrno(_ code: Int32) -> Bool {
     switch code {
@@ -531,6 +532,21 @@ internal extension Posix {
     }
 }
 
+internal extension Posix {
+    static func cmsgFirstHeader(inside msghdr: UnsafePointer<msghdr>?) throws -> UnsafeMutablePointer<cmsghdr>? {
+        return sysCmsgFirstHdr(msghdr)
+    }
+    
+    static func cmsgNextHeader(inside msghdr: UnsafePointer<msghdr>?, from: UnsafePointer<cmsghdr>?) throws
+        -> UnsafeMutablePointer<cmsghdr>? {
+        return sysCmsgNxtHdr(msghdr, from)
+    }
+    
+    static func cmsgData(for header: UnsafePointer<cmsghdr>?) -> UnsafeMutablePointer<UInt8>? {
+        return sysCmsgData(header)
+    }
+}
+
 #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
 internal enum KQueue {
 
@@ -552,16 +568,3 @@ internal enum KQueue {
     }
 }
 #endif
-
-internal extension Posix {
-    static func cmsgFirstHeader(inside msghdr: UnsafePointer<msghdr>?) throws -> UnsafeMutablePointer<cmsghdr>? {
-        return sysCmsgFirstHdr(msghdr)
-    }
-    
-    static func cmsgNextHeader(inside msghdr: UnsafePointer<msghdr>?, from: UnsafePointer<cmsghdr>?) throws
-        -> UnsafeMutablePointer<cmsghdr>? {
-        return sysCmsgNxtHdr(msghdr, from)
-    }
-}
-
-

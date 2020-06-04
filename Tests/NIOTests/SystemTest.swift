@@ -43,15 +43,16 @@ class SystemTest: XCTestCase {
         }
     }
     
-    // Example twin data options on apple. - TOS and TTL
-    private static let cmsghdrExample: [UInt8] = [0x10, 0x00, 0x00, 0x00,
-                                                  0x00, 0x00, 0x00, 0x00,
-                                                  0x07, 0x00, 0x00, 0x00,
-                                                  0x7F, 0x00, 0x00, 0x01,
-                                                  0x0D, 0x00, 0x00, 0x00,
-                                                  0x00, 0x00, 0x00, 0x00,
-                                                  0x1B, 0x00, 0x00, 0x00,
-                                                  0x01, 0x00, 0x00, 0x00]
+    #if os(macOS)
+    // Example twin data options on apple.
+    private static let cmsghdrExample: [UInt8] = [0x10, 0x00, 0x00, 0x00, // Length 16 including header
+                                                  0x00, 0x00, 0x00, 0x00, // IPPROTO_IP
+                                                  0x07, 0x00, 0x00, 0x00, // IP_RECVDSTADDR???
+                                                  0x7F, 0x00, 0x00, 0x01, // 127.0.0.1
+                                                  0x0D, 0x00, 0x00, 0x00, // Length 13 including header
+                                                  0x00, 0x00, 0x00, 0x00, // IPPROTO_IP
+                                                  0x1B, 0x00, 0x00, 0x00, // IP_RECVTOS
+                                                  0x01, 0x00, 0x00, 0x00] // ECT-1 (1 byte)
 
     func testCmsgFirstHeader() {
         var exampleCmsgHrd = SystemTest.cmsghdrExample
@@ -88,4 +89,23 @@ class SystemTest: XCTestCase {
             }
         }())
     }
+    
+    func testCMsgData() {
+        var exampleCmsgHrd = SystemTest.cmsghdrExample
+        XCTAssertNoThrow(try {
+            try exampleCmsgHrd.withUnsafeMutableBytes { pCmsgHdr in
+                var msgHdr = msghdr()
+                msgHdr.msg_control = pCmsgHdr.baseAddress
+                msgHdr.msg_controllen = socklen_t(pCmsgHdr.count)
+
+                try withUnsafePointer(to: msgHdr) { pMsgHdr in
+                    let first = try Posix.cmsgFirstHeader(inside: pMsgHdr)
+                    let firstData = try Posix.cmsgData(for: first)
+                    let expecedFirstData = UnsafeMutableRawBufferPointer(rebasing: pCmsgHdr[12..<16])
+                    XCTAssertEqual(expecedFirstData.baseAddress, firstData)
+                }
+            }
+        }())
+    }
+    #endif
 }

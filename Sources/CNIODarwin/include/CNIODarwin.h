@@ -36,6 +36,7 @@ int CNIODarwin_recvmmsg(int sockfd, CNIODarwin_mmsghdr *msgvec, unsigned int vle
 
 struct cmsghdr *CNIO_CMSG_FIRSTHDR(const struct msghdr *);
 struct cmsghdr *CNIO_CMSG_NXTHDR(const struct msghdr *, const struct cmsghdr *);
+unsigned char *CNIO_CMSG_DATA(const struct cmsghdr *);
 
 #endif  // __APPLE__
 #endif  // C_NIO_DARWIN_H
