@@ -62,4 +62,13 @@ unsigned char *CNIO_CMSG_DATA(const struct cmsghdr *cmsg) {
     return CMSG_DATA(cmsg);
 }
 
+size_t CNIO_CMSG_LEN(size_t payloadSizeBytes) {
+    return CMSG_LEN(payloadSizeBytes);
+}
+
+size_t CNIO_CMSG_SPACE(size_t payloadSizeBytes) {
+    return CMSG_SPACE(payloadSizeBytes);
+}
+
+
 #endif  // __APPLE__

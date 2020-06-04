@@ -103,6 +103,8 @@ private let sysCmsgFirstHdr: @convention(c) (UnsafePointer<msghdr>?) -> UnsafeMu
 private let sysCmsgNxtHdr: @convention(c) (UnsafePointer<msghdr>?, UnsafePointer<cmsghdr>?) ->
                 UnsafeMutablePointer<cmsghdr>? = CNIO_CMSG_NXTHDR
 private let sysCmsgData: @convention(c) (UnsafePointer<cmsghdr>?) -> UnsafeMutablePointer<UInt8>? = CNIO_CMSG_DATA
+private let sysCmsgSpace: @convention(c) (size_t) -> size_t = CNIO_CMSG_SPACE
+private let sysCmsgLen: @convention(c) (size_t) -> size_t = CNIO_CMSG_LEN
 
 private func isBlacklistedErrno(_ code: Int32) -> Bool {
     switch code {
@@ -545,6 +547,15 @@ internal extension Posix {
     static func cmsgData(for header: UnsafePointer<cmsghdr>?) -> UnsafeMutablePointer<UInt8>? {
         return sysCmsgData(header)
     }
+    
+    static func cmsgLen(payloadSize: size_t) -> size_t {
+        return sysCmsgLen(payloadSize)
+    }
+    
+    static func cmsgSpace(payloadSize: size_t) -> size_t {
+        return sysCmsgSpace(payloadSize)
+    }
+    
 }
 
 #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
