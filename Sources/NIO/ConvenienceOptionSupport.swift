@@ -118,7 +118,7 @@ extension NIOClientTCPBootstrapProtocol {
     /// - parameters:
     ///     - options:  The options to try applying - the options applied should be consumed from here.
     /// - returns: The updated bootstrap with and options applied.
-    public func applyOptions(_ options: inout NIOTCPShorthandOptions) -> Self {
+    public func _applyOptions(_ options: inout NIOTCPShorthandOptions) -> Self {
         // Default is to consume no options and not update self.
         return self
     }
@@ -133,7 +133,7 @@ extension NIOClientTCPBootstrap {
         var optionsRemaining = options
         // First give the underlying a chance to consume options.
         let withUnderlyingOverrides =
-            NIOClientTCPBootstrap(self, withUpdated: underlyingBootstrap.applyOptions(&optionsRemaining))
+            NIOClientTCPBootstrap(self, withUpdated: underlyingBootstrap._applyOptions(&optionsRemaining))
         // Default apply any remaining options.
         let applier = NIOClientTCPBootstrap_Applier(contained: withUnderlyingOverrides)
         return optionsRemaining.applyFallbackMapping(applier).contained
