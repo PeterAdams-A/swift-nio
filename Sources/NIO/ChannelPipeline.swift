@@ -947,13 +947,73 @@ extension ChannelPipeline {
     /// of the behaviour of `ChannelHandler.add(first:)`.
     ///
     /// - parameters:
+    ///     - handlers: The collection of `ChannelHandler`s to be added.
+    ///     - position: The position in the `ChannelPipeline` to add `handlers`. Defaults to `.last`.
+    ///
+    /// - returns: A future that will be completed when all of the supplied `ChannelHandler`s were added.
+    public func addHandlers<CollectionType: Collection>(_ handlers: CollectionType,
+                                                        position: ChannelPipeline.Position = .last) -> EventLoopFuture<Void> where CollectionType.Element == ChannelHandler {
+        var handlers = handlers
+        let individualPosition: ChannelPipeline.Position
+        switch position {
+        case .first:
+            // TODO: handlers.reverse()
+            individualPosition = .first
+        case .last:
+            individualPosition = .last
+        case .before(let handler):
+            individualPosition = .before(handler)
+        case .after(let handler):
+            // TODO: handlers.reverse()
+            individualPosition = .after(handler)
+        }
+
+        func addHandlersMakingPromise(handlers: CollectionType,
+                                      individualPositin: ChannelPipeline.Position) -> EventLoopFuture<Void> {
+            let promise = self.eventLoop.makePromise(of: Void.self)
+
+            // Add all the handlers.
+            func addAllHandlersAndComplete() {
+                for handler in handlers {
+                    let addResult = self._add(handler, position: individualPosition)
+                    switch addResult {
+                    case .success:
+                        break // Keep going.
+                    case .failure:
+                        // Report failure and return.
+                        promise.completeWith(addResult)
+                        return
+                    }
+                }
+                promise.succeed(())
+            }
+
+            if self.eventLoop.inEventLoop {
+                addAllHandlersAndComplete()
+            } else {
+                self.eventLoop.execute {
+                    addAllHandlersAndComplete()
+                }
+            }
+
+            return promise.futureResult
+        }
+
+        return addHandlersMakingPromise(handlers: handlers, individualPositin: individualPosition)
+    }
+
+    /// Adds the provided channel handlers to the pipeline in the order given, taking account
+    /// of the behaviour of `ChannelHandler.add(first:)`.
+    ///
+    /// - parameters:
     ///     - handlers: One or more `ChannelHandler`s to be added.
     ///     - position: The position in the `ChannelPipeline` to add `handlers`. Defaults to `.last`.
     ///
     /// - returns: A future that will be completed when all of the supplied `ChannelHandler`s were added.
     public func addHandlers(_ handlers: ChannelHandler...,
                             position: ChannelPipeline.Position = .last) -> EventLoopFuture<Void> {
-        return addHandlers(handlers, position: position)
+        let specialCollection = HandlerCollection(handlers)
+        return addHandlers(specialCollection, position: position)
     }
 }
 
