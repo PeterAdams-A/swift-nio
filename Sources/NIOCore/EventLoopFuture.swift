@@ -14,6 +14,7 @@
 
 import NIOConcurrencyHelpers
 import Dispatch
+import Backtrace
 
 /// Internal list of callbacks.
 ///
@@ -417,6 +418,7 @@ public final class EventLoopFuture<Value> {
         debugOnly {
             if let creation = eventLoop._promiseCompleted(futureIdentifier: _NIOEventLoopFutureIdentifier(self)) {
                 if self._value == nil {
+		    Backtrace.print()
                     fatalError("leaking promise created at \(creation)", file: creation.file, line: creation.line)
                 }
             } else {

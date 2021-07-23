@@ -17,7 +17,8 @@ import PackageDescription
 
 var targets: [PackageDescription.Target] = [
     .target(name: "NIOCore",
-            dependencies: ["NIOConcurrencyHelpers"]),
+            dependencies: ["NIOConcurrencyHelpers",
+		.product(name: "Backtrace", package: "swift-backtrace")]),
     .target(name: "NIO",
             dependencies: ["CNIOLinux",
                            "CNIODarwin",
@@ -100,6 +101,7 @@ let package = Package(
         .library(name: "NIOTestUtils", targets: ["NIOTestUtils"]),
     ],
     dependencies: [
+  	.package(name: "swift-backtrace", url: "https://github.com/swift-server/swift-backtrace.git", from: "1.1.1"),
     ],
     targets: targets
 )
