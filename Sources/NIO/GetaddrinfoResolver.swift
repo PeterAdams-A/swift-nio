@@ -61,10 +61,15 @@ internal class GetaddrinfoResolver: Resolver {
     ///     - aiSocktype: The sock type to use as hint when calling getaddrinfo.
     ///     - aiProtocol: the protocol to use as hint when calling getaddrinfo.
     init(loop: EventLoop, aiSocktype: NIOBSDSocket.SocketType, aiProtocol: CInt) {
+        ppalognio("init Getaddrinforesolver")
         self.v4Future = loop.makePromise()
         self.v6Future = loop.makePromise()
         self.aiSocktype = aiSocktype
         self.aiProtocol = aiProtocol
+    }
+
+    deinit {
+        ppalognio("deinit getaddrresolver")
     }
 
     /// Initiate a DNS A query for a given host.
@@ -119,7 +124,7 @@ internal class GetaddrinfoResolver: Resolver {
     /// clean up their state.
     ///
     /// In the getaddrinfo case this is a no-op, as the resolver blocks.
-    func cancelQueries() { }
+    func cancelQueries() {  ppalognio("cancel") }
 
     /// Perform the DNS queries and record the result.
     ///
@@ -127,6 +132,7 @@ internal class GetaddrinfoResolver: Resolver {
     ///     - host: The hostname to do the DNS queries on.
     ///     - port: The port we'll be connecting to.
     private func resolveBlocking(host: String, port: Int) {
+        ppalognio("resolve \(host)")
 #if os(Windows)
         host.withCString(encodedAs: UTF16.self) { wszHost in
             String(port).withCString(encodedAs: UTF16.self) { wszPort in
