@@ -25,6 +25,8 @@
 // We naturally still use an enum to hold our state, but the FSM is now inside a class, which makes the shared
 // state nature of this FSM a bit clearer.
 
+import NIOCore
+
 private extension Array where Element == EventLoopFuture<Channel> {
     mutating func remove(element: Element) {
         guard let channelIndex = self.firstIndex(where: { $0 === element }) else {
@@ -509,6 +511,7 @@ internal class HappyEyeballsConnector {
     ///
     /// Cleans up internal state and fails the connection promise.
     private func timedOut() {
+        ppalognio("timeout")
         cleanUp()
         self.resolutionPromise.fail(ChannelError.connectTimeout(self.connectTimeout))
     }

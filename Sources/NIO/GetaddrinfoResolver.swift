@@ -24,6 +24,7 @@
 /// This resolver is a single-use object: it can only be used to perform a single host resolution.
 
 import Dispatch
+import NIOCore
 
 #if os(Linux) || os(FreeBSD) || os(Android)
 import CNIOLinux
@@ -208,8 +209,11 @@ internal class GetaddrinfoResolver: Resolver {
             info = nextInfo
         }
 
+        ppalognio("succ1")
         v6Future.succeed(v6Results)
+        ppalognio("succ2")
         v4Future.succeed(v4Results)
+        ppalognio("succ3")
     }
 
     /// Record an error and fail the lookup process.
