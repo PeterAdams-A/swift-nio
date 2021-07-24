@@ -193,6 +193,7 @@ public final class MultiThreadedEventLoopGroup: EventLoopGroup {
         // This method cannot perform its final cleanup using EventLoopFutures, because it requires that all
         // our event loops still be alive, and they may not be. Instead, we use Dispatch to manage
         // our shutdown signaling, and then do our cleanup once the DispatchQueue is empty.
+	ppalognio("shutdown el")
         let g = DispatchGroup()
         let q = DispatchQueue(label: "nio.shutdownGracefullyQueue", target: queue)
         let wasRunning: Bool = self.shutdownLock.withLock {

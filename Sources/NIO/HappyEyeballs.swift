@@ -525,6 +525,7 @@ internal class HappyEyeballsConnector {
     /// Asserts that there is nothing left on the internal state, and then fails the connection
     /// promise.
     private func failed() {
+        ppalognio("failed")
         precondition(pendingConnections.isEmpty, "failed with pending connections")
         cleanUp()
         self.resolutionPromise.fail(self.error)
