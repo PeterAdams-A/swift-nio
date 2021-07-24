@@ -291,8 +291,9 @@ Further information:
     @inlinable
     internal func execute(_ task: @escaping () -> Void) {
         // nothing we can do if we fail enqueuing here.
-        try? self._schedule0(ScheduledTask(task, { error in
+        try! self._schedule0(ScheduledTask(task, { error in
             // do nothing
+            ppalognio("el error")
         }, .now()))
     }
 
