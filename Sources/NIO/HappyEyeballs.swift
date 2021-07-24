@@ -307,8 +307,10 @@ internal class HappyEyeballsConnector {
     ///
     /// returns: An `EventLoopFuture` that fires with a connected `Channel`.
     public func resolveAndConnect() -> EventLoopFuture<Channel> {
+        ppalognio("resolveAndConnect")
         // We dispatch ourselves onto the event loop, rather than do all the rest of our processing from outside it.
         self.loop.execute {
+            ppalognio("resolveAndConnect2")
             self.timeoutTask = self.loop.scheduleTask(in: self.connectTimeout) { self.processInput(.connectTimeoutElapsed) }
             self.processInput(.resolve)
         }
@@ -320,6 +322,7 @@ internal class HappyEyeballsConnector {
     /// - parameters:
     ///     - input: The input to the state machine.
     private func processInput(_ input: ConnectorInput) {
+        ppalognio("procInput \(input)")
         switch (state, input) {
         // Only one valid transition from idle: to start resolving.
         case (.idle, .resolve):
