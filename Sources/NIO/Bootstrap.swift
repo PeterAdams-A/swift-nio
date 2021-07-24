@@ -578,7 +578,7 @@ public final class ClientBootstrap: NIOClientTCPBootstrapProtocol {
     ///     - port: The port to connect to.
     /// - returns: An `EventLoopFuture<Channel>` to deliver the `Channel` when connected.
     public func connect(host: String, port: Int) -> EventLoopFuture<Channel> {
-        ppalognio("Connect \(host)")
+        ppalognio("Connect \(host) \(port)")
         let loop = self.group.next()
         let resolver = self.resolver ?? GetaddrinfoResolver(loop: loop,
                                                             aiSocktype: .stream,
@@ -592,7 +592,9 @@ public final class ClientBootstrap: NIOClientTCPBootstrapProtocol {
                 $0.eventLoop.makeSucceededFuture(())
             }
         }
-        return connector.resolveAndConnect()
+	let result = connector.resolveAndConnect()
+	ppalognio("connect returning \(result)")
+        return result
     }
 
     private func connect(freshChannel channel: Channel, address: SocketAddress) -> EventLoopFuture<Void> {
