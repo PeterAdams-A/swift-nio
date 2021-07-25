@@ -303,6 +303,7 @@ Further information:
         if self.inEventLoop {
             precondition(self._validInternalStateToScheduleTasks,
                          "BUG IN NIO (please report): EventLoop is shutdown, yet we're on the EventLoop.")
+            ppalognio("EL down")
 
             self._tasksLock.withLockVoid {
                 self._scheduledTasks.push(task)
@@ -312,6 +313,7 @@ Further information:
                 guard self.validExternalStateToScheduleTasks else {
                     print("ERROR: Cannot schedule tasks on an EventLoop that has already shut down. " +
                           "This will be upgraded to a forced crash in future SwiftNIO versions.")
+                    ppalognio("EL down")
                     return false
                 }
 
